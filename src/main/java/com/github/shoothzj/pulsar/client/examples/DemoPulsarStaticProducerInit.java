@@ -14,9 +14,15 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class DemoPulsarStaticProducerInit {
 
-    private volatile Producer<byte[]> xxProducer;
-
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, new DefaultThreadFactory("pulsar-producer-init"));
+
+    private final String topic;
+
+    private volatile Producer<byte[]> producer;
+
+    public DemoPulsarStaticProducerInit(String topic) {
+        this.topic = topic;
+    }
 
     public void init() {
         executorService.scheduleWithFixedDelay(this::initWithRetry, 0, 10, TimeUnit.SECONDS);
@@ -25,14 +31,14 @@ public class DemoPulsarStaticProducerInit {
     private void initWithRetry() {
         try {
             final DemoPulsarClientInit instance = DemoPulsarClientInit.getInstance();
-            xxProducer = instance.getPulsarClient().newProducer().create();
+            producer = instance.getPulsarClient().newProducer().topic(topic).create();
         } catch (Exception e) {
             log.error("init pulsar producer error, exception is ", e);
         }
     }
 
-    public Producer<byte[]> getXxProducer() {
-        return xxProducer;
+    public Producer<byte[]> getProducer() {
+        return producer;
     }
 
 }

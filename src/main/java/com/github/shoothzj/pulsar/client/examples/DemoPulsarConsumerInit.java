@@ -14,9 +14,15 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class DemoPulsarConsumerInit {
 
-    private volatile Consumer<byte[]> xxConsumer;
-
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, new DefaultThreadFactory("pulsar-consumer-init"));
+
+    private final String topic;
+
+    private volatile Consumer<byte[]> consumer;
+
+    public DemoPulsarConsumerInit(String topic) {
+        this.topic = topic;
+    }
 
     public void init() {
         executorService.scheduleWithFixedDelay(this::initWithRetry, 0, 10, TimeUnit.SECONDS);
@@ -25,10 +31,13 @@ public class DemoPulsarConsumerInit {
     private void initWithRetry() {
         try {
             final DemoPulsarClientInit instance = DemoPulsarClientInit.getInstance();
-            xxConsumer = instance.getPulsarClient().newConsumer().messageListener(new DemoMessageListener<>()).subscribe();
+            consumer = instance.getPulsarClient().newConsumer().topic(topic).messageListener(new DemoMessageListener<>()).subscribe();
         } catch (Exception e) {
             log.error("init pulsar producer error, exception is ", e);
         }
     }
 
+    public Consumer<byte[]> getConsumer() {
+        return consumer;
+    }
 }
