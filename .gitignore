@@ -1,0 +1,31 @@
+# Project exclude paths
+**.log
+**/target
+**/.classpath
+**/.project
+**/.factorypath
+
+# IDE
+.idea/**
+**.iml
+.vscode/**
+
+# gradle
+.gradle/**
+gradle/**
+**/build/**
+
+# mqtt client java
+*.lck
+
+# mvn shade plugin
+dependency-reduced-pom.xml
+
+# benchmark result
+benchmark/**
+
+# file system
+.DS_Store
+
+# log file
+logs/
