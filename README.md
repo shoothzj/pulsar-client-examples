@@ -162,7 +162,7 @@ public class DemoPulsarClientInitUltimate {
 
 - **pulsar.allocator.pooled** 为true则使用堆外内存池，false则使用堆内存分配，不走内存池。默认使用高效的堆外内存池
 - **pulsar.allocator.exit_on_oom** 如果内存溢出，是否关闭**jvm**，默认为false
-- **pulsar.allocator.out_of_memory_policy** 在https://github.com/apache/pulsar/pull/12200引入，目前还没有正式release版本，用于配置当堆外内存不够使用时的行为，可选项为`FallbackToHeap`和`ThrowException`，默认为`FallbackToHeap`，如果你不希望消息序列化的内存影响到堆内存分配，则可以配置成`ThrowException`
+- **pulsar.allocator.out_of_memory_policy** 在https://github.com/apache/pulsar/pull/12200 引入，目前还没有正式release版本，用于配置当堆外内存不够使用时的行为，可选项为`FallbackToHeap`和`ThrowException`，默认为`FallbackToHeap`，如果你不希望消息序列化的内存影响到堆内存分配，则可以配置成`ThrowException`
 
 ## 生产者
 
@@ -280,7 +280,7 @@ public class DemoPulsarStaticProducersInit {
         for (; initIndex < topics.size(); initIndex++) {
             try {
                 final DemoPulsarClientInit instance = DemoPulsarClientInit.getInstance();
-                final Producer<byte[]> producer = instance.getPulsarClient().newProducer().topic(topics.get(initIndex)).create();;
+                final Producer<byte[]> producer = instance.getPulsarClient().newProducer().topic(topics.get(initIndex)).create();
                 producers.add(producer);
             } catch (Exception e) {
                 log.error("init pulsar producer error, exception is ", e);
@@ -795,3 +795,4 @@ public class DemoMessageListenerSyncAtLeastOnceStrictlyOrdered<T> implements Mes
 
 ## 作者简介
 贺张俭，西安电子科技大学毕业，华为云物联网高级工程师
+简书博客地址: https://www.jianshu.com/u/9e21abacd418
