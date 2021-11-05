@@ -173,7 +173,7 @@ public class DemoPulsarClientInitUltimate {
 
 ### messageRoutingMode
 
-消息路由模式。默认为`RoundRobinPartition`。根据业务需求选择，如果需要保序，一般选择`SinglePartition`，把相同key的消息发到同一个`partition`。
+消息路由模式。默认为`RoundRobinPartition`。根据业务需求选择，如果需要保序，通常的做法是在向`Pulsar`发送消息时传递`key`值，这时就会根据`key`来选择要发送到的`partition`。如果有更复杂的保序场景，也可以自定义分发partition的策略。
 
 
 #### autoUpdatePartition
