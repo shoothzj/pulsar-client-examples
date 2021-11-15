@@ -10,7 +10,7 @@ import java.util.concurrent.CompletableFuture;
  * @author hezhangjian
  */
 @Slf4j
-public class DemoPulsarProducerAsyncStrictlyOrdered {
+public class PulsarProducerAsyncStrictlyOrdered {
 
     Producer<byte[]> producer;
 
@@ -22,7 +22,7 @@ public class DemoPulsarProducerAsyncStrictlyOrdered {
                     future.complete(messageId);
                     return;
                 }
-                DemoPulsarProducerAsyncStrictlyOrdered.this.sendMsgAsync(msg, future);
+                PulsarProducerAsyncStrictlyOrdered.this.sendMsgAsync(msg, future);
             });
         } catch (Exception e) {
             log.error("exception is ", e);

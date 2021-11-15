@@ -18,14 +18,14 @@ import java.util.concurrent.TimeUnit;
  * @author hezhangjian
  */
 @Slf4j
-public class DemoPulsarDynamicProducerInit {
+public class PulsarDynamicProducerFactory {
 
     /**
      * topic -- producer
      */
     private final AsyncLoadingCache<String, Producer<byte[]>> producerCache;
 
-    public DemoPulsarDynamicProducerInit() {
+    public PulsarDynamicProducerFactory() {
         this.producerCache = Caffeine.newBuilder()
                 .expireAfterAccess(600, TimeUnit.SECONDS)
                 .maximumSize(3000)
@@ -57,7 +57,7 @@ public class DemoPulsarDynamicProducerInit {
     private CompletableFuture<Producer<byte[]>> acquireFuture(String topic) {
         CompletableFuture<Producer<byte[]>> future = new CompletableFuture<>();
         try {
-            ProducerBuilder<byte[]> builder = DemoPulsarClientInit.getInstance().getPulsarClient().newProducer().enableBatching(true);
+            ProducerBuilder<byte[]> builder = PulsarClientInit.getInstance().getPulsarClient().newProducer().enableBatching(true);
             final Producer<byte[]> producer = builder.topic(topic).create();
             future.complete(producer);
         } catch (Exception e) {
@@ -67,7 +67,7 @@ public class DemoPulsarDynamicProducerInit {
         return future;
     }
 
-    private void sendMsg(String topic, byte[] msg) {
+    public void sendMsg(String topic, byte[] msg) {
         final CompletableFuture<Producer<byte[]>> cacheFuture = producerCache.get(topic);
         cacheFuture.whenComplete((producer, e) -> {
             if (e != null) {
@@ -88,9 +88,9 @@ public class DemoPulsarDynamicProducerInit {
         });
     }
 
-    final Timer timer = new HashedWheelTimer();
+    private final Timer timer = new HashedWheelTimer();
 
-    private void sendMsgWithRetry(String topic, byte[] msg, int retryTimes) {
+    public void sendMsgWithRetry(String topic, byte[] msg, int retryTimes, int maxRetryTimes) {
         final CompletableFuture<Producer<byte[]>> cacheFuture = producerCache.get(topic);
         cacheFuture.whenComplete((producer, e) -> {
             if (e != null) {
@@ -103,8 +103,9 @@ public class DemoPulsarDynamicProducerInit {
                         log.info("topic {} send success, msg id is {}", topic, messageId);
                         return;
                     }
-                    if (retryTimes == 0) {
-                        timer.newTimeout(timeout -> DemoPulsarDynamicProducerInit.this.sendMsgWithRetry(topic, msg, retryTimes - 1), 1 << retryTimes, TimeUnit.SECONDS);
+                    if (retryTimes < maxRetryTimes) {
+                        log.warn("topic {} send failed, begin to retry {} times exception is ", topic, retryTimes, throwable);
+                        timer.newTimeout(timeout -> PulsarDynamicProducerFactory.this.sendMsgWithRetry(topic, msg, retryTimes + 1, maxRetryTimes), 1L << retryTimes, TimeUnit.SECONDS);
                     }
                     log.error("send producer msg error ", throwable);
                 }));

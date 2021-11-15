@@ -9,7 +9,7 @@ import org.apache.pulsar.client.api.MessageListener;
  * @author hezhangjian
  */
 @Slf4j
-public class DemoMessageListener<T> implements MessageListener<T> {
+public class DummyMessageListener<T> implements MessageListener<T> {
 
     @Override
     public void received(Consumer<T> consumer, Message<T> msg) {

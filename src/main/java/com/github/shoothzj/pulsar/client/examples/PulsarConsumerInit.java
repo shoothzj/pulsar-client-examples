@@ -1,26 +1,29 @@
 package com.github.shoothzj.pulsar.client.examples;
 
-import io.netty.util.concurrent.DefaultThreadFactory;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.client.api.Consumer;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author hezhangjian
  */
 @Slf4j
-public class DemoPulsarConsumerInit {
+public class PulsarConsumerInit {
 
-    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, new DefaultThreadFactory("pulsar-consumer-init"));
+    private final ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("pulsar-consumer-init").build();
+
+    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, threadFactory);
 
     private final String topic;
 
     private volatile Consumer<byte[]> consumer;
 
-    public DemoPulsarConsumerInit(String topic) {
+    public PulsarConsumerInit(String topic) {
         this.topic = topic;
     }
 
@@ -30,8 +33,9 @@ public class DemoPulsarConsumerInit {
 
     private void initWithRetry() {
         try {
-            final DemoPulsarClientInit instance = DemoPulsarClientInit.getInstance();
-            consumer = instance.getPulsarClient().newConsumer().topic(topic).messageListener(new DemoMessageListener<>()).subscribe();
+            final PulsarClientInit instance = PulsarClientInit.getInstance();
+            consumer = instance.getPulsarClient().newConsumer().topic(topic).messageListener(new DummyMessageListener<>()).subscribe();
+            executorService.shutdown();
         } catch (Exception e) {
             log.error("init pulsar producer error, exception is ", e);
         }

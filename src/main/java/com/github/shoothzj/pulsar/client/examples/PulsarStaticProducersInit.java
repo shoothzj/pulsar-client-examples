@@ -1,30 +1,34 @@
 package com.github.shoothzj.pulsar.client.examples;
 
-import io.netty.util.concurrent.DefaultThreadFactory;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.client.api.Producer;
 
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author hezhangjian
  */
 @Slf4j
-public class DemoPulsarStaticProducersInit {
+public class PulsarStaticProducersInit {
 
-    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, new DefaultThreadFactory("pulsar-consumer-init"));
+    private final ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("pulsar-producers-init").build();
 
-    private CopyOnWriteArrayList<Producer<byte[]>> producers;
+    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, threadFactory);
 
-    private int initIndex;
+    private final Map<String, Producer<byte[]>> producerMap = new ConcurrentHashMap<>();
 
-    private List<String> topics;
+    private int initIndex = 0;
 
-    public DemoPulsarStaticProducersInit(List<String> topics) {
+    private final List<String> topics;
+
+    public PulsarStaticProducersInit(List<String> topics) {
         this.topics = topics;
     }
 
@@ -34,13 +38,14 @@ public class DemoPulsarStaticProducersInit {
 
     private void initWithRetry() {
         if (initIndex == topics.size()) {
+            executorService.shutdown();
             return;
         }
         for (; initIndex < topics.size(); initIndex++) {
             try {
-                final DemoPulsarClientInit instance = DemoPulsarClientInit.getInstance();
+                final PulsarClientInit instance = PulsarClientInit.getInstance();
                 final Producer<byte[]> producer = instance.getPulsarClient().newProducer().topic(topics.get(initIndex)).create();
-                producers.add(producer);
+                producerMap.put(topics.get(initIndex), producer);
             } catch (Exception e) {
                 log.error("init pulsar producer error, exception is ", e);
                 break;
@@ -48,8 +53,8 @@ public class DemoPulsarStaticProducersInit {
         }
     }
 
-    public CopyOnWriteArrayList<Producer<byte[]>> getProducers() {
-        return producers;
+    public Producer<byte[]> getProducers(String topic) {
+        return producerMap.get(topic);
     }
 
 }

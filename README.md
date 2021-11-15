@@ -13,13 +13,13 @@ import org.apache.pulsar.client.api.PulsarClient;
  * @author hezhangjian
  */
 @Slf4j
-public class DemoPulsarClientInit {
+public class PulsarClientInit {
 
-    private static final DemoPulsarClientInit INSTANCE = new DemoPulsarClientInit();
+    private static final PulsarClientInit INSTANCE = new PulsarClientInit();
 
     private PulsarClient pulsarClient;
 
-    public static DemoPulsarClientInit getInstance() {
+    public static PulsarClientInit getInstance() {
         return INSTANCE;
     }
 
@@ -52,15 +52,15 @@ import java.util.concurrent.TimeUnit;
  * @author hezhangjian
  */
 @Slf4j
-public class DemoPulsarClientInitRetry {
+public class PulsarClientInitRetry {
 
-    private static final DemoPulsarClientInitRetry INSTANCE = new DemoPulsarClientInitRetry();
+    private static final PulsarClientInitRetry INSTANCE = new PulsarClientInitRetry();
 
     private volatile PulsarClient pulsarClient;
 
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, new DefaultThreadFactory("pulsar-cli-init"));
 
-    public static DemoPulsarClientInitRetry getInstance() {
+    public static PulsarClientInitRetry getInstance() {
         return INSTANCE;
     }
 
@@ -108,15 +108,15 @@ import java.util.concurrent.TimeUnit;
  * @author hezhangjian
  */
 @Slf4j
-public class DemoPulsarClientInitUltimate {
+public class PulsarClientInitUltimate {
 
-    private static final DemoPulsarClientInitUltimate INSTANCE = new DemoPulsarClientInitUltimate();
+    private static final PulsarClientInitUltimate INSTANCE = new PulsarClientInitUltimate();
 
     private volatile PulsarClient pulsarClient;
 
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, new DefaultThreadFactory("pulsar-cli-init"));
 
-    public static DemoPulsarClientInitUltimate getInstance() {
+    public static PulsarClientInitUltimate getInstance() {
         return INSTANCE;
     }
 
@@ -195,27 +195,30 @@ public class DemoPulsarClientInitUltimate {
 #### 一个生产者一个线程，适用于生产者数目较少的场景
 
 ```java
-import io.netty.util.concurrent.DefaultThreadFactory;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.client.api.Producer;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author hezhangjian
  */
 @Slf4j
-public class DemoPulsarStaticProducerInit {
+public class PulsarStaticProducerInit {
 
-    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, new DefaultThreadFactory("pulsar-producer-init"));
+    private final ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("pulsar-producer-init").build();
+
+    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, threadFactory);
 
     private final String topic;
 
     private volatile Producer<byte[]> producer;
 
-    public DemoPulsarStaticProducerInit(String topic) {
+    public PulsarStaticProducerInit(String topic) {
         this.topic = topic;
     }
 
@@ -225,8 +228,9 @@ public class DemoPulsarStaticProducerInit {
 
     private void initWithRetry() {
         try {
-            final DemoPulsarClientInit instance = DemoPulsarClientInit.getInstance();
+            final PulsarClientInit instance = PulsarClientInit.getInstance();
             producer = instance.getPulsarClient().newProducer().topic(topic).create();
+            executorService.shutdown();
         } catch (Exception e) {
             log.error("init pulsar producer error, exception is ", e);
         }
@@ -241,31 +245,35 @@ public class DemoPulsarStaticProducerInit {
 
 #### 多个生产者一个线程，适用于生产者数目较多的场景
 ```java
-import io.netty.util.concurrent.DefaultThreadFactory;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.client.api.Producer;
 
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author hezhangjian
  */
 @Slf4j
-public class DemoPulsarStaticProducersInit {
+public class PulsarStaticProducersInit {
 
-    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, new DefaultThreadFactory("pulsar-consumer-init"));
+    private final ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("pulsar-producers-init").build();
 
-    private CopyOnWriteArrayList<Producer<byte[]>> producers;
+    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, threadFactory);
 
-    private int initIndex;
+    private final Map<String, Producer<byte[]>> producerMap = new ConcurrentHashMap<>();
 
-    private List<String> topics;
+    private int initIndex = 0;
 
-    public DemoPulsarStaticProducersInit(List<String> topics) {
+    private final List<String> topics;
+
+    public PulsarStaticProducersInit(List<String> topics) {
         this.topics = topics;
     }
 
@@ -275,13 +283,14 @@ public class DemoPulsarStaticProducersInit {
 
     private void initWithRetry() {
         if (initIndex == topics.size()) {
+            executorService.shutdown();
             return;
         }
         for (; initIndex < topics.size(); initIndex++) {
             try {
-                final DemoPulsarClientInit instance = DemoPulsarClientInit.getInstance();
+                final PulsarClientInit instance = PulsarClientInit.getInstance();
                 final Producer<byte[]> producer = instance.getPulsarClient().newProducer().topic(topics.get(initIndex)).create();
-                producers.add(producer);
+                producerMap.put(topics.get(initIndex), producer);
             } catch (Exception e) {
                 log.error("init pulsar producer error, exception is ", e);
                 break;
@@ -289,8 +298,8 @@ public class DemoPulsarStaticProducersInit {
         }
     }
 
-    public CopyOnWriteArrayList<Producer<byte[]>> getProducers() {
-        return producers;
+    public Producer<byte[]> getProducers(String topic) {
+        return producerMap.get(topic);
     }
 
 }
@@ -305,14 +314,14 @@ public class DemoPulsarStaticProducersInit {
  * @author hezhangjian
  */
 @Slf4j
-public class DemoPulsarDynamicProducerInit {
+public class PulsarDynamicProducerFactory {
 
     /**
      * topic -- producer
      */
     private AsyncLoadingCache<String, Producer<byte[]>> producerCache;
 
-    public DemoPulsarDynamicProducerInit() {
+    public PulsarDynamicProducerFactory() {
         this.producerCache = Caffeine.newBuilder()
                 .expireAfterAccess(600, TimeUnit.SECONDS)
                 .maximumSize(3000)
@@ -359,34 +368,7 @@ public class DemoPulsarDynamicProducerInit {
 ### 可以接受消息丢失的发送
 
 ```java
-final CompletableFuture<Producer<byte[]>> cacheFuture = producerCache.get(topic);
-        cacheFuture.whenComplete((producer, e) -> {
-            if (e != null) {
-                log.error("create pulsar client exception ", e);
-                return;
-            }
-            try {
-                producer.sendAsync(msg).whenComplete(((messageId, throwable) -> {
-                    if (throwable != null) {
-                        log.error("send producer msg error ", throwable);
-                        return;
-                    }
-                    log.info("topic {} send success, msg id is {}", topic, messageId);
-                }));
-            } catch (Exception ex) {
-                log.error("send async failed ", ex);
-            }
-        });
-```
-
-以上为正确处理`Client`创建失败和发送失败的回调函数。但是由于在生产环境下，pulsar并不是一直保持可用的，会因为虚拟机故障、pulsar服务升级等导致发送失败。这个时候如果要保证消息发送成功，就需要对消息发送进行重试。
-
-### 可以容忍极端场景下的发送丢失
-
-```java
-final Timer timer = new HashedWheelTimer();
-
-    private void sendMsgWithRetry(String topic, byte[] msg, int retryTimes) {
+    public void sendMsg(String topic, byte[] msg) {
         final CompletableFuture<Producer<byte[]>> cacheFuture = producerCache.get(topic);
         cacheFuture.whenComplete((producer, e) -> {
             if (e != null) {
@@ -399,8 +381,38 @@ final Timer timer = new HashedWheelTimer();
                         log.info("topic {} send success, msg id is {}", topic, messageId);
                         return;
                     }
-                    if (retryTimes == 0) {
-                        timer.newTimeout(timeout -> DemoPulsarDynamicProducerInit.this.sendMsgWithRetry(topic, msg, retryTimes - 1), 1 << retryTimes, TimeUnit.SECONDS);
+                    log.error("send producer msg error ", throwable);
+                }));
+            } catch (Exception ex) {
+                log.error("send async failed ", ex);
+            }
+        });
+    }
+```
+
+以上为正确处理`Client`创建失败和发送失败的回调函数。但是由于在生产环境下，pulsar并不是一直保持可用的，会因为虚拟机故障、pulsar服务升级等导致发送失败。这个时候如果要保证消息发送成功，就需要对消息发送进行重试。
+
+### 可以容忍极端场景下的发送丢失
+
+```java
+    private final Timer timer = new HashedWheelTimer();
+
+    public void sendMsgWithRetry(String topic, byte[] msg, int retryTimes, int maxRetryTimes) {
+        final CompletableFuture<Producer<byte[]>> cacheFuture = producerCache.get(topic);
+        cacheFuture.whenComplete((producer, e) -> {
+            if (e != null) {
+                log.error("create pulsar client exception ", e);
+                return;
+            }
+            try {
+                producer.sendAsync(msg).whenComplete(((messageId, throwable) -> {
+                    if (throwable == null) {
+                        log.info("topic {} send success, msg id is {}", topic, messageId);
+                        return;
+                    }
+                    if (retryTimes < maxRetryTimes) {
+                        log.warn("topic {} send failed, begin to retry {} times exception is ", topic, retryTimes, throwable);
+                        timer.newTimeout(timeout -> PulsarDynamicProducerFactory.this.sendMsgWithRetry(topic, msg, retryTimes + 1, maxRetryTimes), 1L << retryTimes, TimeUnit.SECONDS);
                     }
                     log.error("send producer msg error ", throwable);
                 }));
@@ -426,11 +438,15 @@ final Timer timer = new HashedWheelTimer();
 同步模式举例：
 
 ```java
+import lombok.extern.slf4j.Slf4j;
+import org.apache.pulsar.client.api.MessageId;
+import org.apache.pulsar.client.api.Producer;
+
 /**
  * @author hezhangjian
  */
 @Slf4j
-public class DemoPulsarProducerSyncStrictlyOrdered {
+public class PulsarProducerSyncStrictlyOrdered {
 
     Producer<byte[]> producer;
 
@@ -500,27 +516,30 @@ public class DemoPulsarProducerSyncStrictlyOrdered {
 
 #### 一个消费者一个线程，适用于消费者数目较少的场景
 ```java
-import io.netty.util.concurrent.DefaultThreadFactory;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.client.api.Consumer;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author hezhangjian
  */
 @Slf4j
-public class DemoPulsarConsumerInit {
+public class PulsarConsumerInit {
 
-    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, new DefaultThreadFactory("pulsar-consumer-init"));
+    private final ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("pulsar-consumer-init").build();
+
+    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, threadFactory);
 
     private final String topic;
 
     private volatile Consumer<byte[]> consumer;
 
-    public DemoPulsarConsumerInit(String topic) {
+    public PulsarConsumerInit(String topic) {
         this.topic = topic;
     }
 
@@ -530,8 +549,9 @@ public class DemoPulsarConsumerInit {
 
     private void initWithRetry() {
         try {
-            final DemoPulsarClientInit instance = DemoPulsarClientInit.getInstance();
-            consumer = instance.getPulsarClient().newConsumer().topic(topic).messageListener(new DemoMessageListener<>()).subscribe();
+            final PulsarClientInit instance = PulsarClientInit.getInstance();
+            consumer = instance.getPulsarClient().newConsumer().topic(topic).messageListener(new DummyMessageListener<>()).subscribe();
+            executorService.shutdown();
         } catch (Exception e) {
             log.error("init pulsar producer error, exception is ", e);
         }
@@ -545,31 +565,35 @@ public class DemoPulsarConsumerInit {
 
 #### 多个消费者一个线程，适用于消费者数目较多的场景
 ```java
-import io.netty.util.concurrent.DefaultThreadFactory;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.client.api.Consumer;
 
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author hezhangjian
  */
 @Slf4j
-public class DemoPulsarConsumersInit {
+public class PulsarConsumersInit {
 
-    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, new DefaultThreadFactory("pulsar-consumer-init"));
+    private final ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("pulsar-consumers-init").build();
 
-    private CopyOnWriteArrayList<Consumer<byte[]>> consumers;
+    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, threadFactory);
 
-    private int initIndex;
+    private final Map<String, Consumer<byte[]>> consumerMap = new ConcurrentHashMap<>();
 
-    private List<String> topics;
+    private int initIndex = 0;
 
-    public DemoPulsarConsumersInit(List<String> topics) {
+    private final List<String> topics;
+
+    public PulsarConsumersInit(List<String> topics) {
         this.topics = topics;
     }
 
@@ -579,13 +603,14 @@ public class DemoPulsarConsumersInit {
 
     private void initWithRetry() {
         if (initIndex == topics.size()) {
+            executorService.shutdown();
             return;
         }
         for (; initIndex < topics.size(); initIndex++) {
             try {
-                final DemoPulsarClientInit instance = DemoPulsarClientInit.getInstance();
-                final Consumer<byte[]> consumer = instance.getPulsarClient().newConsumer().topic(topics.get(initIndex)).messageListener(new DemoMessageListener<>()).subscribe();
-                consumers.add(consumer);
+                final PulsarClientInit instance = PulsarClientInit.getInstance();
+                final Consumer<byte[]> consumer = instance.getPulsarClient().newConsumer().topic(topics.get(initIndex)).messageListener(new DummyMessageListener<>()).subscribe();
+                consumerMap.put(topics.get(initIndex), consumer);
             } catch (Exception e) {
                 log.error("init pulsar producer error, exception is ", e);
                 break;
@@ -593,8 +618,8 @@ public class DemoPulsarConsumersInit {
         }
     }
 
-    public CopyOnWriteArrayList<Consumer<byte[]>> getConsumers() {
-        return consumers;
+    public Consumer<byte[]> getConsumer(String topic) {
+        return consumerMap.get(topic);
     }
 }
 ```
@@ -612,7 +637,7 @@ public class DemoPulsarConsumersInit {
  * @author hezhangjian
  */
 @Slf4j
-public class DemoMessageListenerSyncAtLeastOnce<T> implements MessageListener<T> {
+public class MessageListenerSyncAtLeastOnce<T> implements MessageListener<T> {
 
     @Override
     public void received(Consumer<T> consumer, Message<T> msg) {
@@ -651,7 +676,7 @@ public class DemoMessageListenerSyncAtLeastOnce<T> implements MessageListener<T>
  * @author hezhangjian
  */
 @Slf4j
-public class DemoMessageListenerAsyncAtLeastOnce<T> implements MessageListener<T> {
+public class MessageListenerAsyncAtLeastOnce<T> implements MessageListener<T> {
 
     @Override
     public void received(Consumer<T> consumer, Message<T> msg) {
@@ -676,13 +701,13 @@ public class DemoMessageListenerAsyncAtLeastOnce<T> implements MessageListener<T
     /**
      * 模拟异步执行的业务方法
      * @param msg 消息体
-     * @param demoSendCallback 异步函数的callback
+     * @param sendCallback 异步函数的callback
      */
-    private void asyncPayload(byte[] msg, DemoSendCallback demoSendCallback) {
+    private void asyncPayload(byte[] msg, DemoSendCallback sendCallback) {
         if (System.currentTimeMillis() % 2 == 0) {
-            demoSendCallback.callback(null);
+            sendCallback.callback(null);
         } else {
-            demoSendCallback.callback(new Exception("exception"));
+            sendCallback.callback(new Exception("exception"));
         }
     }
 
@@ -700,7 +725,7 @@ public class DemoMessageListenerAsyncAtLeastOnce<T> implements MessageListener<T
  * @author hezhangjian
  */
 @Slf4j
-public class DemoMessageListenerBlockListener<T> implements MessageListener<T> {
+public class MessageListenerBlockListener<T> implements MessageListener<T> {
 
     /**
      * Semaphore保证最多同时处理500条消息
@@ -733,13 +758,13 @@ public class DemoMessageListenerBlockListener<T> implements MessageListener<T> {
     /**
      * 模拟异步执行的业务方法
      * @param msg 消息体
-     * @param demoSendCallback 异步函数的callback
+     * @param sendCallback 异步函数的callback
      */
-    private void asyncPayload(byte[] msg, DemoSendCallback demoSendCallback) {
+    private void asyncPayload(byte[] msg, DemoSendCallback sendCallback) {
         if (System.currentTimeMillis() % 2 == 0) {
-            demoSendCallback.callback(null);
+            sendCallback.callback(null);
         } else {
-            demoSendCallback.callback(new Exception("exception"));
+            sendCallback.callback(new Exception("exception"));
         }
     }
 
@@ -755,7 +780,7 @@ public class DemoMessageListenerBlockListener<T> implements MessageListener<T> {
  * @author hezhangjian
  */
 @Slf4j
-public class DemoMessageListenerSyncAtLeastOnceStrictlyOrdered<T> implements MessageListener<T> {
+public class MessageListenerSyncAtLeastOnceStrictlyOrdered<T> implements MessageListener<T> {
 
     @Override
     public void received(Consumer<T> consumer, Message<T> msg) {

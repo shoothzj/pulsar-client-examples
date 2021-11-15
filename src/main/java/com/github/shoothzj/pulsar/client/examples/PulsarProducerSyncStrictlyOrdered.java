@@ -8,7 +8,7 @@ import org.apache.pulsar.client.api.Producer;
  * @author hezhangjian
  */
 @Slf4j
-public class DemoPulsarProducerSyncStrictlyOrdered {
+public class PulsarProducerSyncStrictlyOrdered {
 
     Producer<byte[]> producer;
 

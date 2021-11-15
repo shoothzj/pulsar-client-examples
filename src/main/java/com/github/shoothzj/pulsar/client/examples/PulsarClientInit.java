@@ -7,13 +7,13 @@ import org.apache.pulsar.client.api.PulsarClient;
  * @author hezhangjian
  */
 @Slf4j
-public class DemoPulsarClientInit {
+public class PulsarClientInit {
 
-    private static final DemoPulsarClientInit INSTANCE = new DemoPulsarClientInit();
+    private static final PulsarClientInit INSTANCE = new PulsarClientInit();
 
     private PulsarClient pulsarClient;
 
-    public static DemoPulsarClientInit getInstance() {
+    public static PulsarClientInit getInstance() {
         return INSTANCE;
     }
 

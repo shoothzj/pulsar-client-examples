@@ -13,15 +13,15 @@ import java.util.concurrent.TimeUnit;
  * @author hezhangjian
  */
 @Slf4j
-public class DemoPulsarClientInitUltimate {
+public class PulsarClientInitUltimate {
 
-    private static final DemoPulsarClientInitUltimate INSTANCE = new DemoPulsarClientInitUltimate();
+    private static final PulsarClientInitUltimate INSTANCE = new PulsarClientInitUltimate();
 
     private volatile PulsarClient pulsarClient;
 
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, new DefaultThreadFactory("pulsar-cli-init"));
 
-    public static DemoPulsarClientInitUltimate getInstance() {
+    public static PulsarClientInitUltimate getInstance() {
         return INSTANCE;
     }
 
