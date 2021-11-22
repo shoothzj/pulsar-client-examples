@@ -479,7 +479,7 @@ public class PulsarProducerSyncStrictlyOrdered {
 
 自动更新partition信息。如`topic`中`partition`信息不变则不需要配置，降低集群的消耗。
 
-#### subscribeType
+#### subscriptionType
 
 订阅类型，根据业务需求决定。
 
