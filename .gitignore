@@ -12,7 +12,6 @@
 
 # gradle
 .gradle/**
-gradle/**
 **/build/**
 
 # mqtt client java
