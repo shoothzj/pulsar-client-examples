@@ -1,5 +1,6 @@
 plugins {
     java
+    checkstyle
 }
 
 group = "com.github.shoothzj"

@@ -110,7 +110,12 @@ public class PulsarDynamicProducerFactory {
                     log.error("send producer msg error ", throwable);
                 }));
             } catch (Exception ex) {
-                log.error("send async failed ", ex);
+                if (retryTimes < maxRetryTimes) {
+                    log.warn("topic {} send failed, begin to retry {} times exception is ", topic, retryTimes, ex);
+                    timer.newTimeout(timeout -> this.sendMsgWithRetry(topic, msg, retryTimes + 1, maxRetryTimes), 1L << retryTimes, TimeUnit.SECONDS);
+                } else {
+                    log.error("send async failed ", ex);
+                }
             }
         });
     }
