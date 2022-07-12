@@ -25,7 +25,7 @@ dependencies {
     testImplementation("org.apache.pulsar:pulsar-proxy:2.10.0") {
         exclude("org.slf4j", "slf4j-log4j12")
     }
-    testImplementation("org.apache.pulsar:pulsar-broker:2.10.0") {
+    testImplementation("org.apache.pulsar:pulsar-broker:2.10.1") {
         exclude("org.slf4j", "slf4j-log4j12")
     }
     testImplementation("org.apache.bookkeeper:bookkeeper-server:4.14.4") {
