@@ -22,7 +22,15 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    ignore:
+      - dependency-name: "caffeine"
+        versions:
+          - "3.x"
   - package-ecosystem: "gradle"
     directory: "/"
     schedule:
       interval: "daily"
+    ignore:
+      - dependency-name: "caffeine"
+        versions:
+          - "3.x"
