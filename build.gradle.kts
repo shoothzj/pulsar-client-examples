@@ -33,7 +33,7 @@ dependencies {
     testImplementation("org.apache.pulsar:pulsar-broker:$pulsarVersion") {
         exclude("org.slf4j", "slf4j-log4j12")
     }
-    testImplementation("org.apache.bookkeeper:bookkeeper-server:4.14.4") {
+    testImplementation("org.apache.bookkeeper:bookkeeper-server:4.15.0") {
         exclude("org.slf4j", "slf4j-log4j12")
     }
     testImplementation("org.assertj:assertj-core:3.23.1")
