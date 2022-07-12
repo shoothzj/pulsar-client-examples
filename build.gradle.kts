@@ -19,7 +19,7 @@ dependencies {
     implementation("com.google.guava:guava:31.1-jre")
     implementation("org.hibernate.validator:hibernate-validator:7.0.1.Final")
     implementation("org.apache.logging.log4j:log4j-core:2.17.2")
-    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.17.2")
+    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.18.0")
     testAnnotationProcessor("org.projectlombok:lombok:1.18.22")
     testCompileOnly("org.projectlombok:lombok:1.18.22")
     testImplementation("org.apache.pulsar:pulsar-proxy:2.10.1") {
