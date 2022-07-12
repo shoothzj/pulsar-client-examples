@@ -22,7 +22,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.17.2")
     testAnnotationProcessor("org.projectlombok:lombok:1.18.22")
     testCompileOnly("org.projectlombok:lombok:1.18.22")
-    testImplementation("org.apache.pulsar:pulsar-proxy:2.10.0") {
+    testImplementation("org.apache.pulsar:pulsar-proxy:2.10.1") {
         exclude("org.slf4j", "slf4j-log4j12")
     }
     testImplementation("org.apache.pulsar:pulsar-broker:2.10.1") {
