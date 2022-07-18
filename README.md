@@ -162,7 +162,7 @@ public class PulsarClientInitUltimate {
 
 - **pulsar.allocator.pooled** 为true则使用堆外内存池，false则使用堆内存分配，不走内存池。默认使用高效的堆外内存池
 - **pulsar.allocator.exit_on_oom** 如果内存溢出，是否关闭**jvm**，默认为false
-- **pulsar.allocator.out_of_memory_policy** 在https://github.com/apache/pulsar/pull/12200 引入，目前还没有正式release版本，用于配置当堆外内存不够使用时的行为，可选项为`FallbackToHeap`和`ThrowException`，默认为`FallbackToHeap`，如果你不希望消息序列化的内存影响到堆内存分配，则可以配置成`ThrowException`
+- **pulsar.allocator.out_of_memory_policy** 在https://github.com/apache/pulsar/pull/12200 引入，用于配置当堆外内存不够使用时的行为，可选项为`FallbackToHeap`和`ThrowException`，默认为`FallbackToHeap`，如果你不希望消息序列化的内存影响到堆内存分配，则可以配置成`ThrowException`
 
 ## 生产者
 
