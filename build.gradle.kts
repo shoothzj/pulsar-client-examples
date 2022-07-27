@@ -10,7 +10,7 @@ repositories {
     mavenCentral()
 }
 
-val junitVersion = "5.8.2"
+val junitVersion = "5.9.0"
 val lombokVersion = "1.18.24"
 val log4jVersion = "2.18.0"
 val pulsarVersion = "2.10.1"
