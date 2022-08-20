@@ -22,7 +22,7 @@ dependencies {
     implementation("com.github.ben-manes.caffeine:caffeine:2.9.3")
     implementation("io.netty:netty-common:4.1.79.Final")
     implementation("com.google.guava:guava:31.1-jre")
-    implementation("org.hibernate.validator:hibernate-validator:7.0.4.Final")
+    implementation("org.hibernate.validator:hibernate-validator:7.0.5.Final")
     implementation("org.apache.logging.log4j:log4j-core:$log4jVersion")
     implementation("org.apache.logging.log4j:log4j-slf4j-impl:$log4jVersion")
     testAnnotationProcessor("org.projectlombok:lombok:$lombokVersion")
