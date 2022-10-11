@@ -20,7 +20,7 @@ dependencies {
     compileOnly("org.projectlombok:lombok:$lombokVersion")
     implementation("org.apache.pulsar:pulsar-client-admin-original:$pulsarVersion")
     implementation("com.github.ben-manes.caffeine:caffeine:2.9.3")
-    implementation("io.netty:netty-common:4.1.79.Final")
+    implementation("io.netty:netty-common:4.1.83.Final")
     implementation("com.google.guava:guava:31.1-jre")
     implementation("org.hibernate.validator:hibernate-validator:7.0.5.Final")
     implementation("org.apache.logging.log4j:log4j-core:$log4jVersion")
