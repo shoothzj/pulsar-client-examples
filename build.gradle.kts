@@ -19,7 +19,7 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:$lombokVersion")
     compileOnly("org.projectlombok:lombok:$lombokVersion")
     implementation("org.apache.pulsar:pulsar-client-admin-original:$pulsarVersion")
-    implementation("com.github.ben-manes.caffeine:caffeine:2.9.3")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.1.1")
     implementation("io.netty:netty-common:4.1.83.Final")
     implementation("com.google.guava:guava:31.1-jre")
     implementation("org.hibernate.validator:hibernate-validator:7.0.5.Final")
