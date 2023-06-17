@@ -473,7 +473,7 @@ public class PulsarProducerSyncStrictlyOrdered {
 
 #### receiverQueueSize
 
-注意：处理不过来时，消费缓冲队列会积压在内存中，合理配置防止OOM。
+注意：处理不过来时，消费缓冲队列会积压在内存中，合理配置防止OOM。如果服务的CPU比较健康，但是性能上不来，同时`receiverQueueSize`配置地也相对较小（如小于2*TPS），那么就可以考虑增大`receiverQueueSize`。
 
 #### autoUpdatePartition
 
@@ -721,7 +721,7 @@ public class MessageListenerAsyncAtLeastOnce<T> implements MessageListener<T> {
 当消费者处理不过来时，通过阻塞`listener`方法，不再进行业务处理。避免在微服务积累太多消息导致OOM，可以通过RateLimiter或者Semaphore控制处理。
 
 ```java
-**
+/**
  * @author hezhangjian
  */
 @Slf4j
@@ -813,6 +813,12 @@ public class MessageListenerSyncAtLeastOnceStrictlyOrdered<T> implements Message
 
 }
 ```
+
+## FAQ
+
+### 消费者的性能上不去，微服务的CPU也比较低
+
+如果服务的CPU比较健康，但是性能上不来，同时`receiverQueueSize`配置地也相对较小（如小于2*TPS），那么就可以考虑增大`receiverQueueSize`。
 
 ## 致谢
 

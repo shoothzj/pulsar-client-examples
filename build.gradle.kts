@@ -13,7 +13,7 @@ repositories {
 val junitVersion = "5.9.1"
 val lombokVersion = "1.18.24"
 val log4jVersion = "2.18.0"
-val pulsarVersion = "2.10.1"
+val pulsarVersion = "2.11.0"
 
 dependencies {
     annotationProcessor("org.projectlombok:lombok:$lombokVersion")
